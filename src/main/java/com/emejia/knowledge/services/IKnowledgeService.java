@@ -5,20 +5,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import com.emejia.knowledge.model.dtos.KnowledgeCompositeDTO;
 import com.emejia.knowledge.model.dtos.KnowledgeDTO;
 import com.emejia.knowledge.model.utils.PositionTree;
 import com.emejia.knowledge.persistence.entities.Knowledge;
 
 public interface IKnowledgeService {
 	
-	Knowledge createKnowledge(KnowledgeDTO dto);
+	KnowledgeDTO createKnowledge(KnowledgeDTO dto);
 	
 	List<Knowledge> getTree(Long rootId);
 	
-	Optional<Knowledge> getKnowledge(Long id);
+//	Optional<Knowledge> getKnowledge(Long id);
 	
-	KnowledgeCompositeDTO getKnowledge(PositionTree positionTree);
+	KnowledgeDTO getKnowledge(PositionTree positionTree);
 	
 	Knowledge nullObject();
 }

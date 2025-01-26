@@ -2,16 +2,14 @@ package com.emejia.knowledge.services.impl;
 
 import java.sql.Date;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.emejia.knowledge.model.dtos.KnowledgeCompositeDTO;
+import com.emejia.knowledge.mappers.KnowledgeMapper;
 import com.emejia.knowledge.model.dtos.KnowledgeDTO;
 import com.emejia.knowledge.model.utils.PositionTree;
 import com.emejia.knowledge.persistence.entities.Knowledge;
@@ -24,13 +22,15 @@ import jakarta.persistence.EntityNotFoundException;
 public class KnowledgeServiceImpl implements IKnowledgeService{
 
     private final KnowledgeRepository repository;
+    private final KnowledgeMapper mapper;
     
-    public KnowledgeServiceImpl(KnowledgeRepository repository) {
+    public KnowledgeServiceImpl(KnowledgeRepository repository,KnowledgeMapper mapper) {
 		this.repository = repository;
+		this.mapper=mapper;
 	}
 
 	@Transactional
-    public Knowledge createKnowledge(KnowledgeDTO dto) {
+    public KnowledgeDTO createKnowledge(KnowledgeDTO dto) {
         Knowledge knowledge = new Knowledge();
         knowledge.setTitle(dto.getTitle());
         knowledge.setContent(dto.getContent());
@@ -41,7 +41,7 @@ public class KnowledgeServiceImpl implements IKnowledgeService{
                 .orElseThrow(() -> new EntityNotFoundException("Parent not found"));
             knowledge.setParent(parent);
         }
-        return repository.save(knowledge);
+        return mapper.entityToDTO(repository.save(knowledge));
     }
 
     @Transactional(readOnly = true)
@@ -49,15 +49,6 @@ public class KnowledgeServiceImpl implements IKnowledgeService{
         return repository.findByParentId(rootId).stream().
         		filter(k->k.getParent().getId()!=k.getId()).collect(Collectors.toList());
     }
-
-	@Override
-	@Transactional(readOnly = true)
-	public Optional<Knowledge> getKnowledge(Long id) {
-		Optional<Knowledge> knowledge=repository.findById(id);
-		return knowledge;
-	}
-	
-	
 
 	@Override
 	public Knowledge nullObject() {
@@ -74,14 +65,14 @@ public class KnowledgeServiceImpl implements IKnowledgeService{
 
 	@Override
 	@Transactional(readOnly = true)
-	public KnowledgeCompositeDTO getKnowledge(PositionTree positionTree) {
-		Knowledge knowledge=getKnowledge(positionTree.getId()).orElse(nullObject());
-		KnowledgeCompositeDTO dto=getKnowledge(positionTree, entityToDTO(knowledge));
+	public KnowledgeDTO getKnowledge(PositionTree positionTree) {
+		Optional<Knowledge> knowledge=repository.findById(positionTree.getId());
+		KnowledgeDTO dto=getKnowledge(positionTree, entityToDTO(knowledge.get()));
 		return dto;
 	}
 
 	
-	private KnowledgeCompositeDTO getKnowledge(PositionTree positionTree, KnowledgeCompositeDTO dto) {
+	private KnowledgeDTO getKnowledge(PositionTree positionTree, KnowledgeDTO dto) {
 		List<Knowledge> Knowledges=getTree(positionTree.getId());
 		if(positionTree.getDeep()==0 || Knowledges.isEmpty()) {
 			return dto;
@@ -90,8 +81,8 @@ public class KnowledgeServiceImpl implements IKnowledgeService{
 		return dto;
 	}
 	
-	private KnowledgeCompositeDTO entityToDTO(Knowledge knowledge) {
-		KnowledgeCompositeDTO dto=new KnowledgeCompositeDTO();
+	private KnowledgeDTO entityToDTO(Knowledge knowledge) {
+		KnowledgeDTO dto=new KnowledgeDTO();
 		dto.setChildren(new ArrayList<>());
 		dto.setContent(knowledge.getContent());
 		dto.setCreatedAt(knowledge.getCreatedAt());
