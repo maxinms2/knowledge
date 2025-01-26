@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.emejia.knowledge.model.dtos.KnowledgeCompositeDTO;
 import com.emejia.knowledge.model.dtos.KnowledgeDTO;
 import com.emejia.knowledge.model.utils.PositionTree;
 import com.emejia.knowledge.persistence.entities.Knowledge;
@@ -52,7 +53,8 @@ public class KnowledgeServiceImpl implements IKnowledgeService{
 	@Override
 	@Transactional(readOnly = true)
 	public Optional<Knowledge> getKnowledge(Long id) {
-		return repository.findById(id);
+		Optional<Knowledge> knowledge=repository.findById(id);
+		return knowledge;
 	}
 	
 	
@@ -72,20 +74,32 @@ public class KnowledgeServiceImpl implements IKnowledgeService{
 
 	@Override
 	@Transactional(readOnly = true)
-	public Map<PositionTree,List<Knowledge>> getKnowledge(PositionTree positionTree) {
-		Map<PositionTree,List<Knowledge>> map = new HashMap<>();
-		map=getKnowledge(positionTree,map);
-		return map;
+	public KnowledgeCompositeDTO getKnowledge(PositionTree positionTree) {
+		Knowledge knowledge=getKnowledge(positionTree.getId()).orElse(nullObject());
+		KnowledgeCompositeDTO dto=getKnowledge(positionTree, entityToDTO(knowledge));
+		return dto;
+	}
+
+	
+	private KnowledgeCompositeDTO getKnowledge(PositionTree positionTree, KnowledgeCompositeDTO dto) {
+		List<Knowledge> Knowledges=getTree(positionTree.getId());
+		if(positionTree.getDeep()==0 || Knowledges.isEmpty()) {
+			return dto;
+		}		
+		Knowledges.forEach(k->dto.getChildren().add(getKnowledge(new PositionTree(positionTree.getDeep()-1,k.getId()), entityToDTO(k))));
+		return dto;
 	}
 	
-	private Map<PositionTree,List<Knowledge>> getKnowledge(PositionTree positionTree, Map<PositionTree,List<Knowledge>> map) {
-		List<Knowledge> Knowledges=getTree(positionTree.getId());
-		map.put(new PositionTree(positionTree.getDeep(),positionTree.getId()), Knowledges);
-		if(positionTree.getDeep()==0 || Knowledges.isEmpty()) {
-			return map;
-		}		
-		Knowledges.forEach(k->getKnowledge(new PositionTree(positionTree.getDeep()-1, k.getId()), map));
-		return map;
+	private KnowledgeCompositeDTO entityToDTO(Knowledge knowledge) {
+		KnowledgeCompositeDTO dto=new KnowledgeCompositeDTO();
+		dto.setChildren(new ArrayList<>());
+		dto.setContent(knowledge.getContent());
+		dto.setCreatedAt(knowledge.getCreatedAt());
+		dto.setId(knowledge.getId());
+		dto.setParentId(knowledge.getParent().getId());
+		dto.setTitle(knowledge.getTitle());
+		dto.setUpdatedAt(knowledge.getUpdatedAt());
+		return dto;
 	}
 
 }

@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.emejia.knowledge.mappers.KnowledgeMapper;
+import com.emejia.knowledge.model.dtos.KnowledgeCompositeDTO;
 import com.emejia.knowledge.model.dtos.KnowledgeDTO;
 import com.emejia.knowledge.model.utils.PositionTree;
 import com.emejia.knowledge.persistence.entities.Knowledge;
@@ -46,8 +47,8 @@ public class KnowledgeController {
 	}
 	
 	@PostMapping("/deep")
-	public ResponseEntity<Map<PositionTree,List<Knowledge>>> getChildren(@RequestBody PositionTree positionTree) {
-		Map<PositionTree,List<Knowledge>> map=service.getKnowledge(positionTree);
-		return ResponseEntity.ok(map);
+	public ResponseEntity<KnowledgeCompositeDTO> getChildren(@RequestBody PositionTree positionTree) {
+		KnowledgeCompositeDTO knowledge=service.getKnowledge(positionTree);
+		return ResponseEntity.ok(knowledge);
 	}
 }
