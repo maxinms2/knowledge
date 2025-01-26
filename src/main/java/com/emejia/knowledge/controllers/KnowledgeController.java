@@ -1,6 +1,7 @@
 package com.emejia.knowledge.controllers;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.http.ResponseEntity;
@@ -13,6 +14,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.emejia.knowledge.mappers.KnowledgeMapper;
 import com.emejia.knowledge.model.dtos.KnowledgeDTO;
+import com.emejia.knowledge.model.utils.PositionTree;
+import com.emejia.knowledge.persistence.entities.Knowledge;
 import com.emejia.knowledge.services.IKnowledgeService;
 
 @RestController
@@ -40,5 +43,11 @@ public class KnowledgeController {
 	@GetMapping("/{id}/children")
 	public ResponseEntity<List<KnowledgeDTO>> getChildren(@PathVariable Long id) {
 		return ResponseEntity.ok(service.getTree(id).stream().map(x->mapper.EntityToDTO(x)).collect(Collectors.toList()));
+	}
+	
+	@PostMapping("/deep")
+	public ResponseEntity<Map<PositionTree,List<Knowledge>>> getChildren(@RequestBody PositionTree positionTree) {
+		Map<PositionTree,List<Knowledge>> map=service.getKnowledge(positionTree);
+		return ResponseEntity.ok(map);
 	}
 }

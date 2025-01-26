@@ -22,6 +22,7 @@ CREATE INDEX idx_title
     ON knowledge(title);
 
 INSERT INTO knowledge (id, content, created_at, title, updated_at)
-VALUES (1, NULL, CURRENT_TIMESTAMP, '', CURRENT_TIMESTAMP);
+VALUES (1, NULL, CURRENT_TIMESTAMP, 'root', CURRENT_TIMESTAMP);
 
-UPDATE knowledge set parent_id=1 WHERE id = 1;;*/
+UPDATE knowledge set parent_id=1,content = 'root' WHERE id = 1;
+SELECT MAX(id) FROM knowledge;*/
